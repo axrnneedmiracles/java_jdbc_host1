@@ -1,0 +1,6 @@
+backend/bin/
+backend/data/*.db
+backend/data/*.csv
+*.class
+.DS_Store
+Thumbs.db

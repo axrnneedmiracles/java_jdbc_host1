@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduRecord — Student Record Management System</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <!-- LOGIN VIEW -->
+  <main id="loginView" class="auth-wrapper">
+    <section class="auth-card">
+      <div class="brand">
+        <div class="brand-icon">ER</div>
+        <div>
+          <h1>EduRecord</h1>
+          <p>Student Marks &amp; Attendance Portal</p>
+        </div>
+      </div>
+
+      <div class="role-tabs" role="tablist">
+        <button type="button" class="role-tab active" data-role="student" id="tabStudent">Student</button>
+        <button type="button" class="role-tab" data-role="admin" id="tabAdmin">Admin</button>
+      </div>
+
+      <div id="loginError" class="alert-error hidden" role="alert"></div>
+
+      <form id="loginForm" class="form-stack">
+        <div class="field">
+          <label for="username" id="usernameLabel">Student Roll ID</label>
+          <input type="text" id="username" placeholder="e.g. CS101" required autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter password" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="loginBtn">Sign In</button>
+      </form>
+
+      <div class="demo-box" id="demoHint">
+        <strong>Student Trial:</strong> Roll ID <code>CS101</code> – <code>CS105</code> &nbsp;|&nbsp; Password: <code>1234</code>
+      </div>
+
+      <details class="api-config">
+        <summary>Backend API Settings</summary>
+        <div class="field" style="margin-top: 8px;">
+          <label for="apiBaseInput">Java JDBC API URL</label>
+          <input type="url" id="apiBaseInput" placeholder="http://localhost:8080/api" />
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <!-- DASHBOARD VIEW -->
+  <div id="dashboardView" class="app-shell hidden">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand compact">
+          <div class="brand-icon">ER</div>
+          <div>
+            <h2>EduRecord</h2>
+            <span class="subtitle">JDBC + SQLite Portal</span>
+          </div>
+        </div>
+        <div class="user-bar">
+          <span id="roleBadge" class="badge">Student</span>
+          <span id="userDisplay" class="user-name"></span>
+          <button type="button" id="logoutBtn" class="btn btn-ghost">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- STUDENT VIEW: Own Marks & Attendance in Tabular Form -->
+      <div id="studentSection" class="hidden">
+        <section id="studentBanner" class="my-record-card"></section>
+
+        <section class="toolbar" style="margin-top: 16px;">
+          <div class="search-box">
+            <input type="search" id="studentSubjectSearch" placeholder="Filter subjects by name..." />
+          </div>
+          <div class="toolbar-actions">
+            <button type="button" id="studentExportBtn" class="btn btn-secondary">Export My CSV</button>
+          </div>
+        </section>
+
+        <section class="table-card" style="margin-top: 14px;">
+          <div class="table-wrap">
+            <table class="records-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Subject</th>
+                  <th>Marks (Out of 100)</th>
+                  <th>Grade</th>
+                  <th>Attendance (%)</th>
+                  <th>Attendance Status</th>
+                </tr>
+              </thead>
+              <tbody id="studentReportBody"></tbody>
+              <tfoot id="studentReportFoot"></tfoot>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- ADMIN VIEW: Manage All Students (CRUD + CSV Import/Export) -->
+      <div id="adminSection" class="hidden">
+        <section class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Total Students</span>
+            <strong id="statTotal" class="stat-value">0</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Class Avg Marks</span>
+            <strong id="statAvgMarks" class="stat-value">0.0%</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Class Avg Attendance</span>
+            <strong id="statAvgAtt" class="stat-value">0.0%</strong>
+          </div>
+        </section>
+
+        <section class="toolbar" style="margin-top: 16px;">
+          <div class="search-box">
+            <input type="search" id="searchInput" placeholder="Search by Roll ID or Student Name..." />
+            <button type="button" id="clearSearchBtn" class="btn btn-ghost hidden">Clear</button>
+          </div>
+          <div class="toolbar-actions">
+            <button type="button" id="addBtn" class="btn btn-primary">+ Add Student</button>
+            <label for="csvFileInput" class="btn btn-secondary">Import CSV</label>
+            <input type="file" id="csvFileInput" accept=".csv,text/csv" class="hidden" />
+            <button type="button" id="exportBtn" class="btn btn-secondary">Export CSV</button>
+            <button type="button" id="viewDbBtn" class="btn btn-ghost">View SQLite DB</button>
+          </div>
+        </section>
+
+        <section class="table-card" style="margin-top: 14px;">
+          <div class="table-wrap">
+            <table class="records-table">
+              <thead>
+                <tr>
+                  <th>Roll ID</th>
+                  <th>Student Name</th>
+                  <th>Subject Marks (5 Subjects)</th>
+                  <th>Overall %</th>
+                  <th>Avg Attendance</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="recordsBody"></tbody>
+            </table>
+          </div>
+          <div id="emptyState" class="empty-state hidden">No student records found.</div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- ADD / EDIT MODAL (Admin Only) -->
+  <div id="studentModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card modal-wide">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add Student</h3>
+        <button type="button" class="icon-close" id="closeModalBtn" aria-label="Close">&times;</button>
+      </div>
+      <form id="studentForm" class="form-grid">
+        <input type="hidden" id="studentId" />
+        <div class="field-row">
+          <div class="field">
+            <label for="fRollId">Roll ID *</label>
+            <input type="text" id="fRollId" placeholder="e.g. CS106" required />
+          </div>
+          <div class="field">
+            <label for="fName">Student Name *</label>
+            <input type="text" id="fName" placeholder="e.g. Sneha Kulkarni" required />
+          </div>
+        </div>
+
+        <div class="subject-section-title">5 Subjects — Marks (0–100) &amp; Attendance % (0–100)</div>
+        <div class="subject-inputs" id="subjectInputs"></div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="cancelModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveStudentBtn">Save Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SQLITE DATABASE VIEWER MODAL (Admin Only) -->
+  <div id="dbModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width: 860px;">
+      <div class="modal-header">
+        <h3>Live SQLite Database (`students` table)</h3>
+        <button type="button" class="icon-close" id="closeDbModalBtn" aria-label="Close">&times;</button>
+      </div>
+      <div id="dbMeta" class="demo-box" style="margin-top:0; margin-bottom:12px;"></div>
+      <div class="table-wrap" style="max-height: 55vh; overflow: auto; border: 1px solid var(--border); border-radius: 8px;">
+        <table class="records-table" style="font-size: 0.82rem;">
+          <thead>
+            <tr>
+              <th>id</th><th>roll_id</th><th>name</th>
+              <th>sub1</th><th>sub2</th><th>sub3</th><th>sub4</th><th>sub5</th>
+              <th>att1</th><th>att2</th><th>att3</th><th>att4</th><th>att5</th>
+            </tr>
+          </thead>
+          <tbody id="dbRowsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
