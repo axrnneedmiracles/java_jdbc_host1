@@ -1,4 +1,4 @@
-# Student Record Management System (Java JDBC & SQLite)
+# Student Record Management System (Java JDBC + SQLite)
 
 A compact, professional Java project with a **separate frontend website** (`frontend/`) and **core Java JDBC + SQLite backend** (`backend/`), responsive on both **phone and desktop**.
 
